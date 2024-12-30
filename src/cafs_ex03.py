@@ -19,9 +19,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.metrics import recall_score
-# from sklearn.naive_bayes import GaussianNB
-# from sklearn.neighbors import KNeighborsClassifier
-# from sklearn import svm
 
 from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
