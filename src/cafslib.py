@@ -27,8 +27,14 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import ComplementNB
 from sklearn.naive_bayes import MultinomialNB
+
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn import svm
+from sklearn.neighbors import RadiusNeighborsClassifier
+
+from sklearn.neural_network import MLPClassifier
+
+from sklearn import svm # LinearSVC
+
 
 # Libraries to adapt the gaussian naive bayes
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -43,13 +49,21 @@ from joblib import Parallel, delayed
 def train_model(model_name):
   """ To train the model
   """
-  # m = KNeighborsClassifier(n_neighbors=1)
+  # m = KNeighborsClassifier(n_neighbors=1) # *
+  # m = RadiusNeighborsClassifier()
   
   # Variants of Naïve Bayes
   # m = GaussianNB()
   # m = BernoulliNB() 
-  m = ComplementNB(alpha=10.0) 
+  # m = ComplementNB(alpha=10.0) # *
   # m = MultinomialNB()
+
+  # MLPClassifier(hidden_layer_sizes=(100,), activation='relu', *, solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+  m = MLPClassifier(solver='sgd', max_iter=5000, shuffle=False)
+
+  # m = svm.LinearSVC(penalty='l2', loss='squared_hinge', *, dual='auto', tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None, verbose=0, random_state=None, max_iter=1000)[source]#
+  # m = svm.NuSVC(*, nu=0.5, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
+
 
   return m
 

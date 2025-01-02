@@ -120,17 +120,15 @@ plt.savefig(imgpath + 'cafs_cis.png', bbox_inches='tight')
 
 
 
-"""# **Algarrobo Experiment**"""
-"""
-alagarrobo = pd.read_csv('/content/sample_data/algarrobo.csv')
+# **Algarrobo Experiment**
+alagarrobo = pd.read_csv('../data/algarrobo.csv')
 algarrobo_x = alagarrobo.loc[:, 'R':'REDVI']
 y_algarrobo = alagarrobo['Labels'].replace(to_replace=['N', 'P'], value=[0, 1])
 y_algarrobo
 
 X_algarrono = (algarrobo_x-algarrobo_x.min())/(algarrobo_x.max()-algarrobo_x.min())
 
-algarrobo_x,algarrobo_y,algarrobo_score = cafs(covering_array,X_algarrono,y_algarrobo,10)
-"""
+algarrobo_x,algarrobo_y,algarrobo_score = cl.cafs(covering_array,X_algarrono,y_algarrobo,10)
 
 
 """**UMAP Vizualization**"""
