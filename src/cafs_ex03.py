@@ -24,6 +24,14 @@ from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
 import math
 
+import umap
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+import plotly.express as px
+
+from testflows.combinatorics import Covering
+
+
 imgpath = '../images/'
 
 # Load data
@@ -132,16 +140,10 @@ algarrobo_x,algarrobo_y,algarrobo_score = cl.cafs(covering_array,X_algarrono,y_a
 
 
 """**UMAP Vizualization**"""
-
-"""
+'''
 # Commented out IPython magic to ensure Python compatibility.
 # %pip install umap-learn
 
-import umap
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler
-import plotly.express as px
 
 umap_2d = umap.UMAP(n_components=2)
 umap_3d = umap.UMAP(n_components=3)
@@ -174,16 +176,13 @@ fig = plt.figure()
 # syntax for 3-D projection
 ax = plt.axes(projection ='3d')
 
-# plotting
-ax.scatter(algarrobo_umap_3d[:, 0], algarrobo_umap_3d[:, 1], algarrobo_umap_3d[:, 2], c = colors)
-plt.show();
-"""
-
-
-
+# Plotting
+ax.scatter(algarrobo_umap_3d[:, 0], algarrobo_umap_3d[:, 1], algarrobo_umap_3d[:, 2]) # , c = colors)
+# plt.show();
+plt.savefig(imgpath + 'algarrobo_umap.png', bbox_inches='tight')
 
 """# **Cacao Experiment**"""
-"""
+
 cacao_reduced = df_norm_cacao[['1225', '1322', '1559', '1936', '2296']]
 cacao_reduced
 
@@ -201,6 +200,7 @@ fig_3d = px.scatter_3d(
 )
 fig_3d.update_traces(marker_size=5)
 fig_3d.show()
+
 
 from sklearn.decomposition import PCA
 
@@ -227,5 +227,5 @@ plt.scatter(
 
 plt.gca().set_aspect('equal', 'datalim')
 plt.title('PCA Algarrobo', fontsize=24);
-"""
+'''
 

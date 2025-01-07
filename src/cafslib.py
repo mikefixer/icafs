@@ -35,6 +35,7 @@ from sklearn.neural_network import MLPClassifier
 
 from sklearn import svm # LinearSVC
 
+from sklearn import tree
 
 # Libraries to adapt the gaussian naive bayes
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -42,7 +43,12 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 # from sklearn.model_selection import GridSearchCV
 
 # To parallelize
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
+
+# Libraries for the ICAFS algorithm
+from math import inf
+from testflows.combinatorics import Covering
+
 
 ####################################################################
 # Train the model. By now, there is a single model.
@@ -55,15 +61,21 @@ def train_model(model_name):
   # Variants of Naïve Bayes
   # m = GaussianNB()
   # m = BernoulliNB() 
-  # m = ComplementNB(alpha=10.0) # *
+  m = ComplementNB(alpha=10.0) # *
   # m = MultinomialNB()
 
   # MLPClassifier(hidden_layer_sizes=(100,), activation='relu', *, solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-  m = MLPClassifier(solver='sgd', max_iter=5000, shuffle=False)
+  # m = MLPClassifier(solver='sgd', max_iter=5000, shuffle=False)
 
-  # m = svm.LinearSVC(penalty='l2', loss='squared_hinge', *, dual='auto', tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None, verbose=0, random_state=None, max_iter=1000)[source]#
-  # m = svm.NuSVC(*, nu=0.5, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
+  # svm.LinearSVC(penalty='l2', loss='squared_hinge', *, dual='auto', tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None, verbose=0, random_state=None, max_iter=1000)[source]#
+  # m = svm.LinearSVC(penalty='l2', C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, verbose=0, random_state=None, max_iter=1000)#
+  # svm.NuSVC(nu=0.5, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
+  # m = svm.NuSVC(kernel='poly', degree=9)
+  # svm.SVC(*, C=1.0, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
+  # m = svm.SVC(kernel='poly', degree=2)
 
+  # sklearn.tree.DecisionTreeClassifier(*, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0, monotonic_cst=None)
+  # m = tree.DecisionTreeClassifier(criterion='log_loss')
 
   return m
 
@@ -147,4 +159,77 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
      result_list_score.append(global_max)
 
   return result_list_x,result_list_y,result_list_score
+
+
+
+#######################################################################################################
+# TODO: Use model, the same as CAFS
+# TODO: Test on the three datasets
+######################################################################################################
+def ICAFS(datasetX, datasetY, strenght,max_iteartion):
+  max_iteartion_aux =  max_iteartion
+  t_strenght = strenght
+  v_variable = [0, 1]
+  best_f1_score = float('-inf')
+  best_data_set = datasetX.columns.values.copy()
+  max_iteration = 60
+  max_len = inf
+  score_list = []
+  featur_list = []
+  iter_list = []
+  max_it = 0;
+
+  while (max_iteartion_aux >= 0):
+
+      dict_parameters = {}
+      partial_best_list = []
+      partial_score = 0
+      for colum_key in best_data_set:
+          dict_parameters[colum_key] = v_variable
+      random.shuffle(best_data_set)
+      generate_covering_array = Covering(dict_parameters, strength=t_strenght)
+      for test in generate_covering_array.array:
+          list_attributes_to_consider = []
+
+          check_for_all_cero = True
+          for (test_key, test_value) in test.items():
+              if test_value == 1:
+                  check_for_all_cero = False
+                  list_attributes_to_consider.append(test_key)
+
+          if check_for_all_cero:
+              continue
+          df_temp = datasetX.loc[ :,list_attributes_to_consider]
+          X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, datasetY.values.ravel(), test_size=0.20,
+                                                                                  random_state=42)
+
+          #stdsc = StandardScaler()
+          #X_train_std = stdsc.fit_transform(X_train_temp)
+          #X_test_std = stdsc.transform(X_test_temp)
+          clf_new = svm.SVC()
+          clf_new.fit(X_train_temp, y_train_temp)
+
+          y_pred = clf_new.predict(X_test_temp)
+          print(list_attributes_to_consider)
+          score = f1_score(y_test_temp, y_pred,average='macro')
+          #print(score)
+          if score > partial_score :
+              partial_score = score
+              partial_best_list = list_attributes_to_consider
+          clf_new = None
+      best_data_set = partial_best_list.copy()
+      best_f1_score = partial_score
+      print("best_f1_score= %s" % best_f1_score)
+      print(best_data_set)
+      print(len(best_data_set))
+      print('---------------------')
+
+      aux_data_score = best_f1_score
+      score_list.append(aux_data_score)
+      max_iteartion_aux = max_iteartion_aux-1
+      max_it = max_it +1
+      featur_list.append(len(best_data_set))
+      iter_list.append(max_it)
+  return score_list,featur_list,iter_list
+
 
