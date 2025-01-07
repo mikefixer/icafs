@@ -93,6 +93,7 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
      'GaussianNB'
      'svm'
      'kNeighborsClassifier'
+     'NeuralNetworks'
 
   """
 
@@ -166,12 +167,13 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
 # TODO: Use model, the same as CAFS
 # TODO: Test on the three datasets
 ######################################################################################################
-def ICAFS(datasetX, datasetY, strenght,max_iteartion):
-  max_iteartion_aux =  max_iteartion
+def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
+  # Required control variables
+  max_iter_aux =  max_iter
   t_strenght = strenght
   v_variable = [0, 1]
   best_f1_score = float('-inf')
-  best_data_set = datasetX.columns.values.copy()
+  best_data_set = dataset_x.columns.values.copy()
   max_iteration = 60
   max_len = inf
   score_list = []
@@ -179,7 +181,8 @@ def ICAFS(datasetX, datasetY, strenght,max_iteartion):
   iter_list = []
   max_it = 0;
 
-  while (max_iteartion_aux >= 0):
+  # Iterate to reduce the number of features whenever it is possible.
+  while (max_iter_aux >= 0):
 
       dict_parameters = {}
       partial_best_list = []
@@ -188,6 +191,8 @@ def ICAFS(datasetX, datasetY, strenght,max_iteartion):
           dict_parameters[colum_key] = v_variable
       random.shuffle(best_data_set)
       generate_covering_array = Covering(dict_parameters, strength=t_strenght)
+
+      # Select a subset of features according to the generated covering array
       for test in generate_covering_array.array:
           list_attributes_to_consider = []
 
@@ -199,24 +204,25 @@ def ICAFS(datasetX, datasetY, strenght,max_iteartion):
 
           if check_for_all_cero:
               continue
-          df_temp = datasetX.loc[ :,list_attributes_to_consider]
-          X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, datasetY.values.ravel(), test_size=0.20,
+          df_temp = dataset_x.loc[ :,list_attributes_to_consider]
+
+          # Organize data for train/test
+          X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, dataset_y.values.ravel(), test_size=0.20,
                                                                                   random_state=42)
 
-          #stdsc = StandardScaler()
-          #X_train_std = stdsc.fit_transform(X_train_temp)
-          #X_test_std = stdsc.transform(X_test_temp)
-          clf_new = svm.SVC()
-          clf_new.fit(X_train_temp, y_train_temp)
+          # Train the pre-defined model
+          m = train_model( model )
+          m.fit(X_train_temp, y_train_temp)
 
-          y_pred = clf_new.predict(X_test_temp)
+
+          y_pred = m.predict(X_test_temp)
           print(list_attributes_to_consider)
           score = f1_score(y_test_temp, y_pred,average='macro')
           #print(score)
           if score > partial_score :
               partial_score = score
               partial_best_list = list_attributes_to_consider
-          clf_new = None
+          m = None
       best_data_set = partial_best_list.copy()
       best_f1_score = partial_score
       print("best_f1_score= %s" % best_f1_score)
@@ -226,7 +232,7 @@ def ICAFS(datasetX, datasetY, strenght,max_iteartion):
 
       aux_data_score = best_f1_score
       score_list.append(aux_data_score)
-      max_iteartion_aux = max_iteartion_aux-1
+      max_iter_aux = max_iter_aux-1
       max_it = max_it +1
       featur_list.append(len(best_data_set))
       iter_list.append(max_it)
