@@ -2,6 +2,10 @@
 """
 iCAFS Library
 
+- train_model
+- cafs
+- icafs
+
 January - 2025
 -- Authors --
 Salvador Romo
@@ -14,27 +18,22 @@ import pandas as pd
 import numpy as np
 import random
 
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, accuracy_score
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import recall_score
+
+from sklearn.metrics import f1_score
+# from sklearn.metrics import recall_score
+#from sklearn.metrics import accuracy_score
 
 # Import the classifiers to be tested
 from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import ComplementNB
 from sklearn.naive_bayes import MultinomialNB
-
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import RadiusNeighborsClassifier
-
 from sklearn.neural_network import MLPClassifier
-
 from sklearn import svm # LinearSVC
-
 from sklearn import tree
 
 # Libraries to adapt the gaussian naive bayes
@@ -55,13 +54,13 @@ from testflows.combinatorics import Covering
 def train_model(model_name):
   """ To train the model
   """
-  # m = KNeighborsClassifier(n_neighbors=1) # *
+  m = KNeighborsClassifier(n_neighbors=1) # *
   # m = RadiusNeighborsClassifier()
   
   # Variants of Naïve Bayes
   # m = GaussianNB()
   # m = BernoulliNB() 
-  m = ComplementNB(alpha=10.0) # *
+  # m = ComplementNB(alpha=10.0) # *
   # m = MultinomialNB()
 
   # MLPClassifier(hidden_layer_sizes=(100,), activation='relu', *, solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
@@ -94,7 +93,7 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
      'svm'
      'kNeighborsClassifier'
      'NeuralNetworks'
-
+     'DecisionTreeClassifier'
   """
 
   # Required variables
@@ -154,12 +153,12 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
      num_colums  = len(global_data_set.columns)
      mx_data_set = None
      max_score = 0
-     max_iteartion = max_iteartion  +1
+     max_iteartion = max_iteartion + 1
      result_list_x.append(max_iteartion)
      result_list_y.append(len(global_data_set.columns))
      result_list_score.append(global_max)
 
-  return result_list_x,result_list_y,result_list_score
+  return result_list_x, result_list_y, result_list_score
 
 
 
@@ -236,6 +235,6 @@ def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
       max_it = max_it +1
       featur_list.append(len(best_data_set))
       iter_list.append(max_it)
-  return score_list,featur_list,iter_list
+  return score_list, featur_list, iter_list
 
 
