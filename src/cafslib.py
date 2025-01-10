@@ -2,9 +2,9 @@
 """
 iCAFS Library
 
-- train_model
-- cafs
-- icafs
+- train_model() - function used to train the model among a set of classifiers from scikit-learn.
+- cafs()
+- icafs()
 
 January - 2025
 -- Authors --
@@ -21,28 +21,15 @@ import random
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 
-from sklearn.metrics import f1_score
-# from sklearn.metrics import recall_score
-#from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, auc
 
 # Import the classifiers to be tested
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import ComplementNB
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import RadiusNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB, BernoulliNB, ComplementNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn import svm # LinearSVC
-from sklearn import tree
-
-# Libraries to adapt the gaussian naive bayes
-from sklearn.base import BaseEstimator, ClassifierMixin
-# from sklearn.naive_bayes import GaussianNB - Already loaded
-# from sklearn.model_selection import GridSearchCV
-
-# To parallelize
-#from joblib import Parallel, delayed
+from sklearn.svm import LinearSVC, SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
 # Libraries for the ICAFS algorithm
 from math import inf
@@ -51,36 +38,15 @@ from testflows.combinatorics import Covering
 
 ####################################################################
 # Train the model. By now, there is a single model.
-def train_model(model_name):
+def train_model(model_name='GaussianNB'):
   """ To train the model
   """
-  m = KNeighborsClassifier(n_neighbors=1) # *
-  # m = RadiusNeighborsClassifier()
+  # Model parameters: Default parameters to avoid bias
+  m_parameters = '()'
+  if model_name == 'KNeighborsClassifier':
+    m_parameters = '(n_neighbors=1)'
   
-  # Variants of Naïve Bayes
-  # m = GaussianNB()
-  # m = BernoulliNB() 
-  # m = ComplementNB(alpha=10.0) # *
-  # m = MultinomialNB()
-
-  # Variants of MLP
-  # MLPClassifier(hidden_layer_sizes=(100,), activation='relu', *, solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-  # m = MLPClassifier(solver='sgd', max_iter=5000, shuffle=False)
-
-  # Variants of SVM
-  # svm.LinearSVC(penalty='l2', loss='squared_hinge', *, dual='auto', tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None, verbose=0, random_state=None, max_iter=1000)[source]#
-  # m = svm.LinearSVC(penalty='l2', C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, verbose=0, random_state=None, max_iter=1000)#
-  # svm.NuSVC(nu=0.5, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
-  # m = svm.NuSVC(kernel='poly', degree=9)
-  # svm.SVC(*, C=1.0, kernel='rbf', degree=3, gamma='scale', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', break_ties=False, random_state=None)
-  # m = svm.SVC(kernel='poly', degree=2)
-
-  # Variants of decision tree classifier
-  # sklearn.tree.DecisionTreeClassifier(*, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0, monotonic_cst=None)
-  # m = tree.DecisionTreeClassifier(criterion='log_loss')
-  
-  # TODO Random Forest
-  
+  m = eval(model_name + m_parameters)
 
   return m
 
@@ -214,11 +180,9 @@ def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
           # Organize data for train/test
           X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, dataset_y.values.ravel(), test_size=0.20,
                                                                                   random_state=42)
-
           # Train the pre-defined model
           m = train_model( model )
           m.fit(X_train_temp, y_train_temp)
-
 
           y_pred = m.predict(X_test_temp)
           print(list_attributes_to_consider)
