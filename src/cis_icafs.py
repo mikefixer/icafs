@@ -6,85 +6,36 @@ Script to test the iterative covering array feature selection algorithm using th
 Salvador Romo and Miguel De-la-Torre
 iteso and UdG working together.
 """
-# from testflows.combinatorics import Covering
-
-import random
-import pandas as pd
-import numpy as np
-import math
-
 # Our Library!!! - still under development
 import cafslib as cl
-from testflows.combinatorics import Covering
 
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import time
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-from matplotlib.patches import Circle
 
-imgpath = '../images/' # TODO: Modify according to the test case and the classifier
+imgpath = '../images/'
 
 ############################## TEST CASE - CIRCLE IN SQUARE ################################
+# INFO: Reading the dataset. Separate the dataframes for features and labels.
+dfCIS = pd.read_csv('../data/cis_data.csv')
+X = dfCIS[['X', 'Y', 'X10', 'Y10', 'X20', 'Y20', 'X30', 'Y30', 'X40', 'Y40']]
+y = dfCIS[['Result']]
 
-# The parameters of the covering array
-paramter_to_test = {"1":[0,1],"2":[0,1],"3":[0,1],"4":[0,1],"5":[0,1],"6":[0,1]}
-generate_covering_array = Covering(paramter_to_test, strength=3)
+# Normalize data (some samples fall outside the feature space, due to additive noise)
+scaler = MinMaxScaler()
+X_norm = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 
-# print(generate_covering_array)
-
-# Read/generate data
-center = (0.5, 0.5)
-radius = 0.5
-circle = Circle(center, radius)
-
-# fig, ax = plt.subplots()
-# ax.add_patch(circle)
-# ax.set_aspect('equal')
-
-lst = []
-points_outside = 0
-points_inside = 0
-
-while(points_inside < 1000 ):
-  x  = random.uniform(0, 1)
-  y  = random.uniform(0, 1)
-  a  = random.uniform(0, .1)
-  b  = random.uniform(0, .2)
-  c =  random.uniform(0, .3)
-  d =  random.uniform(0, .4)
-
-  if (x - center[0])**2 + (y - center[1])**2  <=  radius**2:
-        lst.append([x,y,a,b,c,d,1])
-        # plt.plot(x,y,'ro')
-        points_inside+=1
-
-while(points_outside < 1000 ):
-  x  = random.uniform(0, 1)
-  y  = random.uniform(0, 1)
-  a  = random.uniform(0, .1)
-  b  = random.uniform(0, .2)
-  c =  random.uniform(0, .3)
-  d =  random.uniform(0, .4)
-
-  if (x - center[0])**2 + (y - center[1])**2  >  radius**2:
-        lst.append([x,y,a,b,c,d,0])
-        # plt.plot(x,y,'bo')
-        points_outside+=1
-
-#plt.savefig('/content/save_data/circle_in_the_sqaure.png', dpi=300, transparent=False, bbox_inches='tight')
-# plt.show()
-
-cisDf = pd.DataFrame(lst, columns=['X', 'Y','A','B','C','D','Result'])
-
-
-X_cis = cisDf[['X', 'Y','A','B','C','D']]
-y_cis= cisDf[['Result']]
-#print(X_cis)
+# Remove samples with NaN
+X_norm_sNaN = X_norm.dropna(how='any')
+y_sNaN = y.loc[X_norm_sNaN.index]
 
 # Feature selection to obtain the selected features and scores
 start_time = time.time()
-res_scores, res_features, res_iter = cl.icafs(X_cis, y_cis, 3, 4)
+res_scores, res_features, res_iter = cl.icafs(X_norm_sNaN, y_sNaN, 3, 4)
 end_time = time.time()
 print(f"Processing time: {end_time - start_time} seconds")
 
@@ -101,10 +52,10 @@ barwidth = 0.4
 color = 'tab:red'
 ax1.set_xlabel('Iteration')
 ax1.set_ylabel('Number of features', color=color)
-ax1.set_title("CAFS Feature selection on the CIS dataset")
+ax1.set_title("ICAFS Feature selection on the CIS dataset")
 ax1.bar(res_iter-0.2, res_features, color=color, width=barwidth)
 ax1.tick_params(axis='y', labelcolor=color)
-ax1.set_ylim(1,max(res_iter)+2)
+ax1.set_ylim(1,max(res_features)+2)
 ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 for i in range(len(res_iter)):
     ax1.text(i+1-0.2,    res_features[i], res_features[i])
@@ -129,7 +80,7 @@ barwidth = 0.4
 color = 'tab:blue'
 ax1.set_xlabel('Number of features')
 ax1.set_ylabel('F1-score', color=color)
-ax1.set_title("CAFS Feature selection on the CIS dataset")
+ax1.set_title("ICAFS Feature selection on the CIS dataset")
 ax1.bar(np.arange(len(res_features))+1, res_scores, color=color, width=barwidth)
 ax1.tick_params(axis='y', labelcolor=color)
 ax1.set_xticks(np.arange(len(res_features))+1, res_features.astype(str))

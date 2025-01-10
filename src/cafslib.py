@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-iCAFS Library
+CAFS Library - The Covering Array Feature Selection Library - By the moment only two methods are implemented: cafs and icafs
 
 - train_model() - function used to train the model among a set of classifiers from scikit-learn.
 - cafs()
@@ -35,23 +35,31 @@ from sklearn.ensemble import RandomForestClassifier
 from math import inf
 from testflows.combinatorics import Covering
 
-
 ####################################################################
-# Train the model. By now, there is a single model.
-def train_model(model_name='GaussianNB'):
+# Possible classifiers from sklearn, with default parameters:
+#  model_name =
+#    'GaussianNB', 'BernoulliNB', 'ComplementNB', 'MultinomialNB'
+#    'KNeighborsClassifier', 'RadiusNeighborsClassifier'
+#    'MLPClassifier'
+#    'LinearSVC', 'SVC'
+#    'DecisionTreeClassifier'
+#    'RandomForestClassifier'
+def train_model(model_name='ComplementNB'):
   """ To train the model
   """
   # Model parameters: Default parameters to avoid bias
   m_parameters = '()'
   if model_name == 'KNeighborsClassifier':
     m_parameters = '(n_neighbors=1)'
+  elif model_name == 'MLPClassifier':
+    m_parameters = '(solver="sgd", max_iter=5000, shuffle=False)'
   
   m = eval(model_name + m_parameters)
 
   return m
 
 # Original algorithm for covering array feature selection
-def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
+def cafs(dataset_x, dataset_y, max_iter, model='KNeighborsClassifier'):
   """
   CAFS - Stands for Covering Arrays Feature Selection.
 
@@ -67,7 +75,10 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
      'NeuralNetworks'
      'DecisionTreeClassifier'
   """
-
+  # TODO: just read once, can it be possible?
+  # Fixed default covering array, according to the original paper (39x1401)
+  ca = np.loadtxt("../data/coveringArray.csv", delimiter=",", dtype=int)
+  
   # Required variables
   global_data_set = dataset_x
   global_max = 0
@@ -134,11 +145,9 @@ def cafs(ca, dataset_x, dataset_y, max_iter, model='GaussianNB'):
 
 
 
-#######################################################################################################
-# TODO: Use model, the same as CAFS
-# TODO: Test on the three datasets
-######################################################################################################
-def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
+#################################################################################################
+#################################################################################################
+def icafs(dataset_x, dataset_y, strenght, max_iter, model='KNeighborsClassifier'):
   # Required control variables
   max_iter_aux =  max_iter
   t_strenght = strenght
@@ -178,8 +187,7 @@ def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
           df_temp = dataset_x.loc[ :,list_attributes_to_consider]
 
           # Organize data for train/test
-          X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, dataset_y.values.ravel(), test_size=0.20,
-                                                                                  random_state=42)
+          X_train_temp, X_test_temp, y_train_temp, y_test_temp = train_test_split(df_temp, dataset_y.values.ravel(), test_size=0.20, random_state=42)
           # Train the pre-defined model
           m = train_model( model )
           m.fit(X_train_temp, y_train_temp)
@@ -187,7 +195,7 @@ def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
           y_pred = m.predict(X_test_temp)
           print(list_attributes_to_consider)
           score = f1_score(y_test_temp, y_pred,average='macro')
-          #print(score)
+          
           if score > partial_score :
               partial_score = score
               partial_best_list = list_attributes_to_consider
@@ -206,5 +214,3 @@ def icafs(dataset_x, dataset_y, strenght, max_iter, model='GaussianNB'):
       featur_list.append(len(best_data_set))
       iter_list.append(max_it)
   return score_list, featur_list, iter_list
-
-

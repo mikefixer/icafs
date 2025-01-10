@@ -13,94 +13,43 @@ import cafslib as cl
 # Load required libraries and functions
 import pandas as pd
 import numpy as np
-import random
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
-#from sklearn.metrics import accuracy_score
-#from sklearn.metrics import recall_score
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from matplotlib.patches import Circle
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-import math
 
 import time
 
 imgpath = '../images/'
 
-# Load data
-covering_array  = np.loadtxt("../data/coveringArray.csv", delimiter=",", dtype=int)
-
 ############################## TEST CASE - CIRCLE IN SQUARE ################################
+# INFO: Reading the dataset. Separate the dataframes for features and labels.
+dfCIS = pd.read_csv('../data/cis_data.csv')
+X = dfCIS[['X', 'Y', 'X10', 'Y10', 'X20', 'Y20', 'X30', 'Y30', 'X40', 'Y40']]
+y = dfCIS[['Result']]
 
-# Read/generate data
-center = (0.5, 0.5)
-radius = 0.5
-circle = Circle(center, radius)
+# Normalize data (some samples fall outside the feature space, due to additive noise)
+scaler = MinMaxScaler()
+X_norm = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 
-fig, ax = plt.subplots()
-ax.add_patch(circle)
-ax.set_aspect('equal')
-
-lst = []
-points_outside = 0
-points_inside = 0
-
-while(points_inside < 1000 ):
-  x  = random.uniform(0, 1)
-  y  = random.uniform(0, 1)
-  a  = random.uniform(0, .1)
-  b  = random.uniform(0, .2)
-  c =  random.uniform(0, .3)
-  d =  random.uniform(0, .4)
-
-  if (x - center[0])**2 + (y - center[1])**2  <=  radius**2:
-        lst.append([x,y,a,b,c,d,1])
-        plt.plot(x,y,'ro')
-        points_inside+=1
-
-while(points_outside < 1000 ):
-  x  = random.uniform(0, 1)
-  y  = random.uniform(0, 1)
-  a  = random.uniform(0, .1)
-  b  = random.uniform(0, .2)
-  c =  random.uniform(0, .3)
-  d =  random.uniform(0, .4)
-
-  if (x - center[0])**2 + (y - center[1])**2  >  radius**2:
-        lst.append([x,y,a,b,c,d,0])
-        plt.plot(x,y,'bo')
-        points_outside+=1
-
-plt.savefig(imgpath + 'cis_cafs.png', dpi=300, transparent=False, bbox_inches='tight')
-#plt.show()
-
-# Organize data and proceed with pre-processing
-df = pd.DataFrame(lst, columns=['X', 'Y','A','B','C','D','Result'])
-df = df.sample(frac = 1)
-
-X = df[['X', 'Y','A','B','C','D']]
-y = df[['Result']]
-
-# Read/generate the Covering Array
-CA2 =[[0, 0, 0, 1, 1, 1],[0, 0, 1, 0, 0, 0],[0, 1, 0, 0, 1, 0],[0 ,1 ,1 ,1 ,0 ,1 ],[1, 0, 0, 0, 0, 1],[1, 0, 1, 1, 1, 0],[1, 1 ,0 ,1 ,0 ,0],[1, 1, 1, 0, 1, 1],[0, 0, 0, 1, 0, 0
-],[0, 0, 1, 0, 1, 1],[1, 1 ,0 ,1 ,1 ,1],[1, 1, 1, 0, 0, 0]]
-ca_np = np.asarray(CA2, dtype=np.int32)
+# Remove samples with NaN
+X_norm_sNaN = X_norm.dropna(how='any')
+y_sNaN = y.loc[X_norm_sNaN.index]
 
 # Feature selection to obtain the scores
 start_time = time.time()
-res_iter, res_features, res_scores = cl.cafs(ca_np,X,y,2)
+res_iter, res_features, res_scores = cl.cafs(X_norm_sNaN, y_sNaN, 4)
 end_time = time.time()
 print(f"Processing time: {end_time - start_time} seconds")
 
-
+########################### DISPLAY RESULTS ###############################
+# Generate figures
 # Convert to numpy arrays to operate over them
 res_scores = np.array(res_scores)
 res_features = np.array(res_features)
 res_iter = np.array(res_iter)
 
-# Generate figures
 # 1. Features/F1-score and iterations
 print('Generating figures...')
 fig, ax1 = plt.subplots()
@@ -111,7 +60,7 @@ ax1.set_ylabel('Number of features', color=color)
 ax1.set_title("CAFS Feature selection on the CIS dataset")
 ax1.bar(res_iter-0.2, res_features, color=color, width=barwidth)
 ax1.tick_params(axis='y', labelcolor=color)
-ax1.set_ylim(1,max(res_iter)+2)
+ax1.set_ylim(1,max(res_features)+2)
 ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 for i in range(len(res_iter)):
     ax1.text(i+1-0.2,    res_features[i], res_features[i])

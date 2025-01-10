@@ -1,31 +1,29 @@
 # -*- coding: utf-8 -*-
-"""CAFS_ex03
+""" cis_cafs
+
+Script to test the iterative covering array feature selection algorithm using the circle in square synthetic dataset
 
 Salvador Romo and Miguel De-la-Torre
 iteso and UdG working together.
 """
-
 # Our Library!!! - still under development
 import cafslib as cl
 
-# Load required libraries and functions
 import pandas as pd
 import numpy as np
-
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import time
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-import time
-
 imgpath = '../images/'
 
-
-############################### TEST CASE - CACAO #####################################
-dfCacao = pd.read_csv('../data/cacao.csv')
-X = dfCacao.iloc[:, 1:]
-y = dfCacao.iloc[:, 0:1]
+############################## TEST CASE - ALGARROBO ################################
+# Reading the dataset
+dfAlagarrobo = pd.read_csv('../data/algarrobo.csv')
+X = dfAlagarrobo.loc[:, 'R':'REDVI']
+y = dfAlagarrobo['Labels'].replace(to_replace=['N', 'P'], value=[0, 1])
 
 # Normalize data (some samples fall outside the feature space, due to additive noise)
 scaler = MinMaxScaler()
@@ -35,20 +33,18 @@ X_norm = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 X_norm_sNaN = X_norm.dropna(how='any')
 y_sNaN = y.loc[X_norm_sNaN.index]
 
-# Feature selection to obtain the scores
+# Feature selection to obtain the selected features and scores
 start_time = time.time()
-res_iter, res_features, res_scores = cl.cafs(X_norm_sNaN, y_sNaN, 5)
+res_scores, res_features, res_iter = cl.icafs(X_norm_sNaN, y_sNaN, 3, 4)
 end_time = time.time()
 print(f"Processing time: {end_time - start_time} seconds")
 
-
-########################### DISPLAY RESULTS ###############################
-# Generate figures
 # Convert to numpy arrays to operate over them
 res_scores = np.array(res_scores)
 res_features = np.array(res_features)
 res_iter = np.array(res_iter)
 
+# Generate figures
 # 1. Features/F1-score and iterations
 print('Generating figures...')
 fig, ax1 = plt.subplots()
@@ -56,10 +52,10 @@ barwidth = 0.4
 color = 'tab:red'
 ax1.set_xlabel('Iteration')
 ax1.set_ylabel('Number of features', color=color)
-ax1.set_title("CAFS Feature selection on the Cacao dataset")
+ax1.set_title("ICAFS Feature selection on the Algarrobo dataset")
 ax1.bar(res_iter-0.2, res_features, color=color, width=barwidth)
 ax1.tick_params(axis='y', labelcolor=color)
-ax1.set_ylim(1,max(res_features)+50)
+ax1.set_ylim(1,max(res_features)+2)
 ax1.xaxis.set_major_locator(MaxNLocator(integer=True))
 for i in range(len(res_iter)):
     ax1.text(i+1-0.2,    res_features[i], res_features[i])
@@ -74,7 +70,7 @@ fig.tight_layout()  # otherwise the right y-label is slightly clipped
 for i in range(len(res_iter)):
     ax2.text(i+1, res_scores[i], f"{res_scores[i]:.3f}")
 
-plt.savefig(imgpath + 'cafs_cacao.png', bbox_inches='tight')
+plt.savefig(imgpath + 'icafs_algarrobo.png', bbox_inches='tight')
 #plt.show()
 
 # 2. Features vs F1-score
@@ -84,7 +80,7 @@ barwidth = 0.4
 color = 'tab:blue'
 ax1.set_xlabel('Number of features')
 ax1.set_ylabel('F1-score', color=color)
-ax1.set_title("CAFS Feature selection on the Cacao dataset")
+ax1.set_title("ICAFS Feature selection on the Algarrobo dataset")
 ax1.bar(np.arange(len(res_features))+1, res_scores, color=color, width=barwidth)
 ax1.tick_params(axis='y', labelcolor=color)
 ax1.set_xticks(np.arange(len(res_features))+1, res_features.astype(str))
@@ -94,5 +90,5 @@ ax1.set_ylim(min(res_scores)-0.001, max(res_scores)+0.001)
 for i in range(len(res_features)):
     ax2.text(i+1, res_scores[i], f"{res_scores[i]:.3f}")
 
-plt.savefig(imgpath + 'cafs_cacao_scores.png', bbox_inches='tight')
-plt.show()
+plt.savefig(imgpath + 'icafs_algarrobo_scores.png', bbox_inches='tight')
+#plt.show()
