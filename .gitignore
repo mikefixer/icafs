@@ -1,0 +1,4 @@
+*.log
+*.log.*
+notebookes/*.jpg
+notebookes/output_images
